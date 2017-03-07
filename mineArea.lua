@@ -49,25 +49,25 @@ function inventoryManage()
     local savedZPos = zPos
     
     -- Move all the way back
-    for iz=2,savedZPos do
+    for iz=1,savedZPos do
       turtle.back()
     end
     checkFuel()
     turtle.turnLeft()
     -- Move all the way to chest
-    for ix=2,savedXPos do
+    for ix=1,savedXPos do
       turtle.forward()
     end
     -- Dump inventory into chest
     dumpInventory(true)
     -- Return to saved location
     -- Make the x val the same
-    for ix=2,savedXPos do
+    for ix=1,savedXPos do
       turtle.back()
     end
     turtle.turnRight()
     -- Make the z val the same
-    for iz=2,savedZPos do
+    for iz=1,savedZPos do
       turtle.forward()
     end    
   end
