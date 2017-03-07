@@ -9,6 +9,9 @@ print("Depth: " .. depth)
 print("Width: " .. width)
 print("Use torches?: " .. useTorches)
 
+local xPos = 0
+local zPos = 0
+
 function checkFuel()
   if (turtle.getFuelLevel() < 5) then
     print("Refuelling ... ")
@@ -32,6 +35,68 @@ function checkFuel()
   end
 end
 
+-- If full inventory, go back to chest
+-- to dump, then go back to position
+function inventoryManage()
+  turtle.select(16)
+  local lastItem = turtle.getItemDetail()
+  turtle.select(1) -- reset
+  -- If there is an item in last slot,
+  -- Go to chest
+  if (lastItem) then
+    -- save position to go back to
+    local savedXPos = xPos
+    local savedZPos = zPos
+    
+    -- Move all the way back
+    for iz=2,savedZPos do
+      turtle.back()
+    end
+    checkFuel()
+    turtle.turnLeft()
+    -- Move all the way to chest
+    for ix=2,savedXPos do
+      turtle.forward()
+    end
+    -- Dump inventory into chest
+    dumpInventory(true)
+    -- Return to saved location
+    -- Make the x val the same
+    for ix=2,savedXPos do
+      turtle.back()
+    end
+    turtle.turnRight()
+    -- Make the z val the same
+    for iz=2,savedZPos do
+      turtle.forward()
+    end    
+  end
+  turtle.select(1)  
+end
+
+-- This will dump this turtles
+-- Entire inventory in the chest in
+-- Front of it.
+-- set excludeItems to true to not input
+-- torches and coal to the chest
+function dumpInventory(excludeItemsUsed)
+  for i=1,16 do
+    turtle.select(i)
+    local doDrop = true
+    if (excludeItemsUsed) then
+      local item = turtle.getItemDetail()
+      if (item) then
+        if (item.name == "minecraft:torch" or item.name == "minecraft:coal") then
+          doDrop = false
+        end
+      end 
+    end
+    if (doDrop) then
+      turtle.drop()
+    end
+  end
+end
+
 function digForwardUntilClear()
   while (turtle.inspect()) do
     turtle.dig()
@@ -46,20 +111,28 @@ function digUpUntilClear()
   end
 end
 
+function digDownUntilClear()
+  while (turtle.inspectDown()) do
+    turtle.digDown()
+    sleep(0.25)
+  end
+end
+
 local widthCovered = 1
-local xPos = 0
-local zPos = 0
 
 while (true) do
   checkFuel()
   for i=1,depth do
     digForwardUntilClear()
     digUpUntilClear()
+    digDownUntilClear()
     turtle.forward()
     zPos = zPos + 1
     checkFuel()
+    inventoryManage()
   end
   digUpUntilClear()
+  digDownUntilClear()
   -- Finished column
   -- Now go back all the way
   for i=1,depth do
@@ -69,7 +142,7 @@ while (true) do
     if (useTorches) then
       if (xPos % 5 == 0 and zPos % 5 == 0) then
         turtle.select(2)
-        turtle.place()
+        turtle.placeDown()
       end
     end
     checkFuel()
@@ -101,10 +174,7 @@ for i=1,width do
   xPos = xPos - 1
 end
 
-for i=1,16 do
-  turtle.select(i)
-  turtle.drop()
-end
+dumpInventory(true)
 
 -- Reset slot we are selecting
 turtle.select(1)
